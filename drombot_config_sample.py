@@ -1,0 +1,4 @@
+BOT_TOKEN = "ВАШ_ТОКЕН"
+USER_ID = 123456789
+SEARCH_CODES = ["код1", "код2"]
+CHECK_INTERVAL = 600
