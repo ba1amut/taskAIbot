@@ -27,5 +27,7 @@ jobs:
           # source venv/bin/activate
           
           sudo systemctl restart taskbot
+          sudo systemctl restart deadlinebot
+          sudo systemctl restart drom-bot
           
           echo "Bot updated and restarted!"
