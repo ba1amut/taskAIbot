@@ -17,7 +17,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           # Переходим в папку с ботом
-          cd /root/taskAIbot
+          cd /home/user/taskAIbot
           
           # Скачиваем изменения
           git pull origin main
@@ -27,5 +27,7 @@ jobs:
           # source venv/bin/activate
           
           sudo systemctl restart taskbot
+          sudo systemctl restart deadlinebot
+          sudo systemctl restart drom-bot
           
           echo "Bot updated and restarted!"
