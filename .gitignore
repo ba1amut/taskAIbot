@@ -3,3 +3,6 @@ tableID.txt
 config.py
 drombot_config.py
 seen_ads.json
+# Игнорировать кэш Python
+__pycache__/
+*.pyc
