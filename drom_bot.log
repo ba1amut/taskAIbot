@@ -1,0 +1,32 @@
+2026-03-14 15:28:41,187 - INFO - Конфиг загружен. Ищем коды: ['52119-48580', '52119-48570']
+2026-03-14 15:28:41,616 - INFO - Запуск бота...
+2026-03-14 15:28:41,616 - INFO - Start polling
+2026-03-14 15:28:41,616 - INFO - Фоновая задача мониторинга запущена
+2026-03-14 15:28:43,576 - INFO - --- Начало цикла проверки ---
+2026-03-14 15:28:43,577 - INFO - Проверка кода: 52119-48580
+2026-03-14 15:28:43,845 - INFO - Запрос к Drom: https://baza.drom.ru/leningradskaya-obl/sell_spare_parts/?query=52119-48580 | Статус: 200
+2026-03-14 15:28:43,929 - INFO - Найдено потенциальных блоков (якорей): 8
+2026-03-14 15:28:43,937 - INFO - Обработано объявлений: 8
+2026-03-14 15:28:43,937 - INFO - НОВОЕ! ID=-17773980179
+2026-03-14 15:28:44,198 - INFO - Run polling for bot @drom_parts_bot id=8489124005 - 'dromParts'
+2026-03-14 15:28:47,542 - INFO - НОВОЕ! ID=-17984455030
+2026-03-14 15:28:48,928 - INFO - НОВОЕ! ID=133994237
+2026-03-14 15:28:50,378 - INFO - НОВОЕ! ID=134332900
+2026-03-14 15:28:50,672 - ERROR - Failed to fetch updates - TelegramConflictError: Telegram server says - Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-03-14 15:28:50,672 - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8489124005)
+2026-03-14 15:28:51,731 - INFO - НОВОЕ! ID=134313837
+2026-03-14 15:28:53,241 - INFO - НОВОЕ! ID=133496150
+2026-03-14 15:28:54,650 - INFO - Проверка кода: 52119-48570
+2026-03-14 15:28:54,884 - INFO - Запрос к Drom: https://baza.drom.ru/leningradskaya-obl/sell_spare_parts/?query=52119-48570 | Статус: 200
+2026-03-14 15:28:54,933 - INFO - Найдено потенциальных блоков (якорей): 18
+2026-03-14 15:28:54,933 - INFO - Обработано объявлений: 18
+2026-03-14 15:28:54,933 - INFO - НОВОЕ! ID=-18164662073
+2026-03-14 15:28:56,300 - INFO - НОВОЕ! ID=-18164662315
+2026-03-14 15:28:57,738 - INFO - НОВОЕ! ID=-18164662012
+2026-03-14 15:28:59,350 - INFO - --- Цикл завершен. Ожидание 600 сек. ---
+2026-03-14 15:29:02,869 - ERROR - Failed to fetch updates - TelegramConflictError: Telegram server says - Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-03-14 15:29:02,869 - WARNING - Sleep for 1.268835 seconds and try again... (tryings = 1, bot id = 8489124005)
+2026-03-14 15:29:08,515 - ERROR - Failed to fetch updates - TelegramConflictError: Telegram server says - Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-03-14 15:29:08,515 - WARNING - Sleep for 1.714503 seconds and try again... (tryings = 2, bot id = 8489124005)
+2026-03-14 15:29:36,125 - ERROR - Failed to fetch updates - TelegramConflictError: Telegram server says - Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-03-14 15:29:36,125 - WARNING - Sleep for 2.331329 seconds and try again... (tryings = 3, bot id = 8489124005)
