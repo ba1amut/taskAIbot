@@ -1,18 +1,31 @@
+name: Deploy Bot
+
+on:
+  push:
+    branches: [ "main" ] # Срабатывает при пуше в ветку main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
     steps:
     - name: Deploy to Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
         username: ${{ secrets.SERVER_USER }}
-        # Передаем ключ напрямую, action сам его обработает
-        key: ${{ secrets.SSH_PRIVATE_KEY }} 
-        # Если вы сделали Base64 шаг выше, раскомментируйте строку ниже и удалите просто key:
-        # key: ${{ secrets.SSH_PRIVATE_KEY }}
-        # Важно: Если использовали base64, appleboy/ssh-action обычно сам декодирует, 
-        # но если ошибка повторится, нужно будет добавить скрипт распаковки.
-        
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd /root/taskAIbot
+          # Переходим в папку с ботом
+          cd /home/user/taskAIbot
+          
+          # Скачиваем изменения
           git pull origin main
-          sudo systemctl restart deadlinebot
+          
+          # ПЕРЕЗАПУСКАЕМ БОТА
+          # Если вы используете venv, раскомментируйте строку ниже и укажите свой путь
+          # source venv/bin/activate
+          
+          sudo systemctl restart taskbot
+          
           echo "Bot updated and restarted!"
