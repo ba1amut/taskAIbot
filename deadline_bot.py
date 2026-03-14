@@ -62,17 +62,15 @@ except Exception as e:
     logger.critical(f"Ошибка подключения к Google Sheets: {e}")
     exit(1)
 
-# --- ИНИЦИАЛИЗАЦИЯ AIogram ---
-
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # --- КЛАВИАТУРЫ ---
 
-# Создаем кнопки меню
 kb_main = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text='📋 Все задачи'), KeyboardButton(text='🔴 Открытые задачи')]
+        [KeyboardButton(text='📋 Все задачи'), KeyboardButton(text='🔴 Открытые задачи')],
+        [KeyboardButton(text='👥 По ответственным')] # Новая кнопка
     ],
     resize_keyboard=True
 )
@@ -115,14 +113,13 @@ async def cmd_start(message: types.Message):
         "Привет! Я бот для учета задач.\n\n"
         "Используйте кнопки меню для просмотра отчетов.\n\n"
         "<b>Как добавить задачу:</b>\n"
-        "Напишите: <code>Наименование, Срок</code>\n"
-        "Пример: <code>Сделать отчет, 25.10.2023</code>\n\n"
+        "Напишите: <code>Наименование, Срок, Ответственный</code>\n"
+        "Пример: <code>Сделать отчет, 25.10.2023, Иванов</code>\n\n"
         "<b>Как закрыть задачу:</b>\n"
         "Напишите: <code>5 закрыть</code>"
     )
     await message.answer(text, parse_mode="HTML", reply_markup=kb_main)
 
-# Обработчик текстовых сообщений (кнопки и команды создания/закрытия)
 @dp.message()
 async def handle_text(message: types.Message):
     text = message.text.strip()
@@ -134,6 +131,9 @@ async def handle_text(message: types.Message):
     elif text == '🔴 Открытые задачи':
         await show_open_tasks(message)
         return
+    elif text == '👥 По ответственным':
+        await show_by_assignee(message)
+        return
         
     # 2. Обработка команды закрытия
     match_close = re.match(r'^(\d+)\s+закрыть$', text, re.IGNORECASE)
@@ -143,18 +143,14 @@ async def handle_text(message: types.Message):
         return
 
     # 3. Обработка создания задачи
+    # Теперь проверяем наличие хотя бы одной запятой
     if ',' in text:
-        parts = text.split(',', 1)
-        name = parts[0].strip()
-        deadline = parts[1].strip()
-        
-        if name and deadline:
-            await create_task(message, name, deadline)
-            return
+        await create_task(message, text)
+        return
 
-    await message.answer("Не понял команду. Формат:\n<code>Задача, Срок</code>\nили <code>Номер закрыть</code>", parse_mode='HTML')
+    await message.answer("Не понял команду. Формат:\n<code>Задача, Срок, Ответственный</code>\nили <code>Номер закрыть</code>", parse_mode='HTML')
 
-# --- ФУНКЦИИ ДЕЙСТВИЙ ---
+# --- ФУНКЦИИ ОТЧЕТОВ ---
 
 async def show_all_tasks(message: types.Message):
     try:
@@ -166,9 +162,10 @@ async def show_all_tasks(message: types.Message):
         response = "<b>📋 Все задачи:</b>\n\n"
         for row in records:
             icon = get_status_icon(row.get('Статус'), row.get('Плановый срок'))
+            assignee = row.get('Ответственный', '-')
             response += (
                 f"{icon} <b>№{row.get('№', '?')}: {row.get('Наименование', '?')}</b>\n"
-                f"Статус: {row.get('Статус', '?')} | Срок: {row.get('Плановый срок', '?')}\n"
+                f"👤 {assignee} | Срок: {row.get('Плановый срок', '?')}\n"
                 f"───────────────\n"
             )
             if len(response) > 3900:
@@ -192,9 +189,10 @@ async def show_open_tasks(message: types.Message):
         response = "<b>🔴 Открытые задачи:</b>\n\n"
         for row in open_tasks:
             icon = get_status_icon(row.get('Статус'), row.get('Плановый срок'))
+            assignee = row.get('Ответственный', '-')
             response += (
                 f"{icon} <b>№{row.get('№', '?')}: {row.get('Наименование', '?')}</b>\n"
-                f"Срок: {row.get('Плановый срок', '?')}\n"
+                f"👤 {assignee} | Срок: {row.get('Плановый срок', '?')}\n"
                 f"───────────────\n"
             )
             
@@ -203,16 +201,76 @@ async def show_open_tasks(message: types.Message):
         logger.error(f"Ошибка: {e}")
         await message.answer(f"Ошибка: {e}")
 
-async def create_task(message: types.Message, name: str, deadline: str):
+async def show_by_assignee(message: types.Message):
     try:
+        records = sheet.get_all_records()
+        # Фильтруем только открытые задачи
+        open_tasks = [r for r in records if r.get('Статус') == 'Открыто']
+        
+        if not open_tasks:
+            await message.answer("Открытых задач нет! ✅")
+            return
+            
+        # Группируем по ответственным
+        grouped = {}
+        for row in open_tasks:
+            assignee = row.get('Ответственный', 'Не указан').strip()
+            if assignee not in grouped:
+                grouped[assignee] = []
+            grouped[assignee].append(row)
+            
+        response = "<b>👥 Открытые задачи по ответственным:</b>\n\n"
+        
+        for assignee, tasks in grouped.items():
+            response += f"<b>👤 {assignee}:</b>\n"
+            for row in tasks:
+                icon = get_status_icon(row.get('Статус'), row.get('Плановый срок'))
+                deadline = row.get('Плановый срок', '?')
+                response += f"  {icon} №{row.get('№')} {row.get('Наименование')} (до {deadline})\n"
+            response += "\n"
+            
+            if len(response) > 3900:
+                response += "... (слишком много данных)"
+                break
+
+        await message.answer(response, parse_mode='HTML')
+        
+    except Exception as e:
+        logger.error(f"Ошибка: {e}")
+        await message.answer(f"Ошибка: {e}")
+
+# --- ФУНКЦИИ ДЕЙСТВИЙ ---
+
+async def create_task(message: types.Message, text: str):
+    try:
+        # Разбиваем строку по запятым
+        parts = [p.strip() for p in text.split(',')]
+        
+        # Проверяем корректность ввода
+        if len(parts) < 2:
+            await message.answer("❌ Мало данных. Формат: <code>Задача, Срок, Ответственный</code>", parse_mode='HTML')
+            return
+            
+        name = parts[0]
+        deadline = parts[1]
+        # Если ответственный не указан, ставим прочерк или "Не указан"
+        assignee = parts[2] if len(parts) > 2 else "Не указан"
+        
         next_id = get_next_number()
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         status = "Открыто"
         
-        row_data = [next_id, now, name, deadline, status, ""]
+        # Порядок колонок: №, Дата создания, Наименование, Плановый срок, Статус, Факт срок, Ответственный
+        row_data = [next_id, now, name, deadline, status, "", assignee]
         sheet.append_row(row_data)
         
-        await message.answer(f"✅ Задача №{next_id} добавлена.")
+        response_text = (
+            f"✅ Задача №{next_id} добавлена.\n"
+            f"📝 Задача: {name}\n"
+            f"📅 Срок: {deadline}\n"
+            f"👤 Ответственный: {assignee}"
+        )
+        await message.answer(response_text)
         logger.info(f"Добавлена задача №{next_id}")
     except Exception as e:
         logger.error(f"Ошибка при создании: {e}")
@@ -227,16 +285,18 @@ async def close_task(message: types.Message, task_id: int):
             return
         
         row_number = cell.row
-        current_status = sheet.cell(row_number, 5).value
         
+        # Проверяем статус (колонка E - номер 5)
+        current_status = sheet.cell(row_number, 5).value
         if current_status == "Закрыто":
             await message.answer("Эта задача уже закрыта.")
             return
             
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        sheet.update_cell(row_number, 5, "Закрыто")
-        sheet.update_cell(row_number, 6, now)
+        # Обновляем статус и фактический срок
+        sheet.update_cell(row_number, 5, "Закрыто")       # Статус
+        sheet.update_cell(row_number, 6, now)            # Фактический срок
         
         await message.answer(f"🏁 Задача №{task_id} закрыта.")
         logger.info(f"Задача №{task_id} закрыта")
